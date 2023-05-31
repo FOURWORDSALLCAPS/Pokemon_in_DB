@@ -4,6 +4,7 @@ import json
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from .models import Pokemon
+from django.utils.timezone import localtime
 
 
 MOSCOW_CENTER = [55.751244, 37.618423]
@@ -33,7 +34,7 @@ def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon in pokemons:
         for pokemon_entity in pokemon.pokemonentity_set.all():
-            if pokemon.image:
+            if pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
                 add_pokemon(
                     folium_map, pokemon_entity.lat,
                     pokemon_entity.lon,
@@ -42,11 +43,13 @@ def show_all_pokemons(request):
 
     pokemons_on_page = []
     for pokemon in pokemons:
-        pokemons_on_page.append({
-            'pokemon_id': pokemon.id,
-            'img_url': request.build_absolute_uri(pokemon.image.url) if pokemon.image else None,
-            'title_ru': pokemon.title
-        })
+        pokemon_entities = pokemon.pokemonentity_set.filter(disappeared_at__gt=localtime(), appeared_at__lt=localtime())
+        if pokemon_entities.exists():
+            pokemons_on_page.append({
+                'pokemon_id': pokemon.id,
+                'img_url': request.build_absolute_uri(pokemon.image.url) if pokemon.image else None,
+                'title_ru': pokemon.title,
+            })
 
     return render(request, 'mainpage.html', context={
         'map': folium_map._repr_html_(),
