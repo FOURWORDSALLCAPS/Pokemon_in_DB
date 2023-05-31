@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Pokemon Go map</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="shortcut icon" href="https://assets.pokemon.com/static2/_ui/img/favicon.ico">
+</head>
+<body>
+  <div class="container">
+    <ul class="nav" style="background-color: #e3f2fd;">
+      <li class="nav-item">
+        <p class="nav-link m-0">Главная</p>
+      </li>
+    </ul>
+    <h1 class="mt-5">Покемоны</h1>
+    <div class="row mt-2">
+      {% for pokemon in pokemons %}
+        <div class="img-thumbnail col-6 col-sm-4 col-md-3 clearfix p-2 m-2">
+          <a href="{% url 'pokemon' pokemon.pokemon_id %}">
+            <div class="d-flex justify-content-center">
+              <img class="pull-left mr-2 float-left" src="{{pokemon.img_url}}" style="height:50px; width:50px">
+              <p class="align-middle m-0" style="line-height:50px; font-size: 20px;">{{pokemon.title_ru}}</p>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+    <h1 class="mt-5 mb-2">Карта покемонов в Москве</h1>
+    <div class="mb-5">
+      {{map|safe}}  
+    </div>
+  </div>
+  
+</body>
+</html>

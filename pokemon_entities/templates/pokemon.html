@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Pokemon Go map</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="shortcut icon" href="https://assets.pokemon.com/static2/_ui/img/favicon.ico">
+</head>
+<body>
+  <div class="container">
+    <ul class="nav" style="background-color: #e3f2fd;">
+      <li class="nav-item">
+        <a class="nav-link active" href="{% url "mainpage" %}">На главную</a>
+      </li>
+    </ul>
+    <div class="d-flex mt-5 row">
+      <div class="pull-left mr-2 float-left ml-4">
+        <img src="{{pokemon.img_url}}" style="height:200px; width:200px">
+      </div>
+      <div class="m-2 ml-4 col-11 col-sm-8 col-lg-8 col-xl-8">
+        <h1>{{pokemon.title_ru}}</h1>
+        <p><b>{{pokemon.title_ru}}</b> (анг. {{pokemon.title_en}}, яп. {{pokemon.title_jp}}) — {{pokemon.description}}</p>
+        <hr>
+        <div class="mt-4">
+          {% if pokemon.next_evolution or pokemon.previous_evolution %}
+            <h4 class="mb-0">Эволюции покемона</h4>
+            <div class="row">
+              {% if pokemon.previous_evolution %}
+                <div class="col-5 clearfix p-2 m-2">
+                  <div class="img-thumbnail">
+                    <a href="{% url 'pokemon' pokemon.previous_evolution.pokemon_id %}">
+                      <div class="d-flex justify-content-center">
+                        <img class="pull-left mr-2 float-left" src="{{pokemon.previous_evolution.img_url}}" style="height:50px; width:50px">
+                        <p class="align-middle m-0" style="line-height:50px; font-size: 20px;">{{pokemon.previous_evolution.title_ru}}</p>
+                      </div>
+                    </a>
+                  </div>
+                  <h6 class="d-flex justify-content-center m-2">Из кого эволюционировал</h6>
+                </div>
+              {% endif %}
+              {% if pokemon.next_evolution %}
+                <div class="col-5 clearfix p-2 m-2">
+                  <div class="img-thumbnail">
+                    <a href="{% url 'pokemon' pokemon.next_evolution.pokemon_id %}">
+                      <div class="d-flex justify-content-center">
+                        <img class="pull-left mr-2 float-left" src="{{pokemon.next_evolution.img_url}}" style="height:50px; width:50px">
+                        <p class="align-middle m-0" style="line-height:50px; font-size: 20px;">{{pokemon.next_evolution.title_ru}}</p>
+                      </div>
+                    </a>
+                  </div>
+                  <h6 class="d-flex justify-content-center m-2">В кого эволюционирует</h6>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+        {% if pokemon.element_type %}
+          <hr>
+          <div class="mt-4">
+            <h4>Стихии покемона</h4>
+            {% for element in pokemon.element_type%}
+              <div>
+                <img class="pull-left mr-2 float-left" style="height:20px;width:20px;" src="{{element.img}}">
+                <p>{{element.title}}, силён против: {{element.strong_against|join:", "}}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+
+    <h1 class="mt-5 mb-2">Карта {{pokemon.title}} в Москве</h1>
+    <div class="mb-5">
+      {{map|safe}}  
+    </div>
+  </div>
+  
+</body>
+</html>
