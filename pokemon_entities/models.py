@@ -8,10 +8,9 @@ class Pokemon(models.Model):
     description = models.TextField(blank=True, null=True)
     title_en = models.CharField(max_length=200, blank=True)
     title_jp = models.CharField(max_length=200, blank=True)
-    previous_evolution = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True, related_name='next_evolutions')
 
     def __str__(self):
-        return '{}'.format(self.title)
+        return '{}'.format(self.title, self.title_en, self.title_jp)
 
 
 class PokemonEntity(models.Model):
