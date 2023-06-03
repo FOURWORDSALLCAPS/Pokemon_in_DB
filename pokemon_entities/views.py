@@ -5,7 +5,6 @@ from django.shortcuts import render
 from .models import Pokemon
 from django.utils.timezone import localtime
 
-
 MOSCOW_CENTER = [55.751244, 37.618423]
 DEFAULT_IMAGE_URL = (
     'https://vignette.wikia.nocookie.net/pokemon/images/6/6e/%21.png/revision'
@@ -74,6 +73,30 @@ def show_pokemon(request, pokemon_id):
     pokemons_on_page = []
     pokemon_entities = requested_pokemon.pokemonentity_set.filter(disappeared_at__gt=localtime(),
                                                                   appeared_at__lt=localtime())
+    evolution = {
+        'previous_evolution': None,
+        'next_evolution': None
+    }
+
+    if requested_pokemon.previous_evolution is not None:
+        previous_evolution = requested_pokemon.previous_evolution
+        evolution['previous_evolution'] = {
+            'pokemon_id': previous_evolution.id,
+            'img_url': request.build_absolute_uri(
+                previous_evolution.image.url) if previous_evolution.image else None,
+            'title_ru': previous_evolution.title
+        }
+
+    if requested_pokemon.next_evolution is not None and requested_pokemon.next_evolution.filter(
+            id__isnull=False).exists():
+        next_evolution = requested_pokemon.next_evolution.filter(id__isnull=False)[0]
+        evolution['next_evolution'] = {
+            'pokemon_id': next_evolution.id,
+            'img_url': request.build_absolute_uri(
+                next_evolution.image.url) if next_evolution.image else None,
+            'title_ru': next_evolution.title
+        }
+
     if pokemon_entities.exists():
         pokemons_on_page.append({
             'pokemon_id': requested_pokemon.id,
@@ -81,7 +104,9 @@ def show_pokemon(request, pokemon_id):
             'title_ru': requested_pokemon.title,
             'description': requested_pokemon.description,
             'title_en': requested_pokemon.title_en,
-            'title_jp': requested_pokemon.title_jp
+            'title_jp': requested_pokemon.title_jp,
+            'previous_evolution': evolution['previous_evolution'],
+            'next_evolution': evolution['next_evolution'],
         })
 
     return render(request, 'pokemon.html', context={
