@@ -27,11 +27,11 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 
 
 def show_all_pokemons(request):
-    pokemons = Pokemon.objects.all()
-
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
+    pokemons = Pokemon.objects.prefetch_related('pokemon_instances').all()
     for pokemon in pokemons:
-        for pokemon_entity in pokemon.pokemonentity_set.all():
+        pokemon_instances = pokemon.pokemon_instances.all()
+        for pokemon_entity in pokemon_instances:
             if pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
                 add_pokemon(
                     folium_map, pokemon_entity.lat,
@@ -62,7 +62,8 @@ def show_pokemon(request, pokemon_id):
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    for pokemon_entity in requested_pokemon.pokemonentity_set.all():
+    requested_pokemon_instances = requested_pokemon.pokemon_instances.prefetch_related('pokemon').all()
+    for pokemon_entity in requested_pokemon_instances:
         if requested_pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
             add_pokemon(
                 folium_map, pokemon_entity.lat,
