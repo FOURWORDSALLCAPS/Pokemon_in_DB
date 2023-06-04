@@ -42,7 +42,8 @@ def show_all_pokemons(request):
 
     pokemons_on_page = []
     for pokemon in pokemons:
-        pokemon_entities = pokemon.pokemonentity_set.filter(disappeared_at__gt=localtime(), appeared_at__lt=localtime())
+        current_time = localtime()
+        pokemon_entities = pokemon.pokemon_instances.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
         if pokemon_entities.exists():
             pokemons_on_page.append({
                 'pokemon_id': pokemon.id,
@@ -69,7 +70,7 @@ def show_pokemon(request, pokemon_id):
             )
 
     pokemons_on_page = []
-    pokemon_entities = requested_pokemon.pokemonentity_set.filter(disappeared_at__gt=localtime(),
+    pokemon_entities = requested_pokemon.pokemon_instances.filter(disappeared_at__gt=localtime(),
                                                                   appeared_at__lt=localtime())
     evolution = {
         'previous_evolution': None,
@@ -85,9 +86,9 @@ def show_pokemon(request, pokemon_id):
             'title_ru': previous_evolution.title
         }
 
-    if requested_pokemon.next_evolution is not None and requested_pokemon.next_evolution.filter(
+    if requested_pokemon.next_evolutions is not None and requested_pokemon.next_evolutions.filter(
             id__isnull=False).exists():
-        next_evolution = requested_pokemon.next_evolution.filter(id__isnull=False)[0]
+        next_evolution = requested_pokemon.next_evolutions.filter(id__isnull=False).first()
         evolution['next_evolution'] = {
             'pokemon_id': next_evolution.id,
             'img_url': request.build_absolute_uri(
