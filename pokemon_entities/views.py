@@ -29,21 +29,22 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 
 def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    pokemons = Pokemon.objects.prefetch_related('pokemon_instances').all()
+    pokemons = Pokemon.objects.prefetch_related('pokemon').all()
+    current_time = localtime()
     for pokemon in pokemons:
-        pokemon_instances = pokemon.pokemon_instances.all()
-        for pokemon_entity in pokemon_instances:
-            if pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
-                add_pokemon(
-                    folium_map, pokemon_entity.lat,
-                    pokemon_entity.lon,
-                    request.build_absolute_uri(pokemon.image.url)
-                )
+        pokemon_entities = pokemon.pokemon.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
+        if pokemon.image and pokemon_entities:
+            pokemon_entity = pokemon_entities.first()
+            add_pokemon(
+                folium_map, pokemon_entity.lat,
+                pokemon_entity.lon,
+                request.build_absolute_uri(pokemon.image.url)
+            )
 
     pokemons_on_page = []
     for pokemon in pokemons:
         current_time = localtime()
-        pokemon_entities = pokemon.pokemon_instances.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
+        pokemon_entities = pokemon.pokemon.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
         if pokemon_entities.exists():
             pokemons_on_page.append({
                 'pokemon_id': pokemon.id,
@@ -60,18 +61,17 @@ def show_all_pokemons(request):
 def show_pokemon(request, pokemon_id):
     requested_pokemon = get_object_or_404(Pokemon, id=pokemon_id)
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    requested_pokemon_instances = requested_pokemon.pokemon_instances.prefetch_related('pokemon').all()
-    for pokemon_entity in requested_pokemon_instances:
-        if requested_pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
-            add_pokemon(
-                folium_map, pokemon_entity.lat,
-                pokemon_entity.lon,
-                request.build_absolute_uri(requested_pokemon.image.url)
-            )
+    pokemon_entity = requested_pokemon.pokemon.prefetch_related('pokemon').all().first()
+    if requested_pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
+        add_pokemon(
+            folium_map, pokemon_entity.lat,
+            pokemon_entity.lon,
+            request.build_absolute_uri(requested_pokemon.image.url)
+        )
 
     pokemons_on_page = []
-    pokemon_entities = requested_pokemon.pokemon_instances.filter(disappeared_at__gt=localtime(),
-                                                                  appeared_at__lt=localtime())
+    pokemon_entities = requested_pokemon.pokemon.filter(disappeared_at__gt=localtime(),
+                                                        appeared_at__lt=localtime())
     evolution = {
         'previous_evolution': None,
         'next_evolution': None
