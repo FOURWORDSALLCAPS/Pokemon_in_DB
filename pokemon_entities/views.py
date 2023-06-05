@@ -1,6 +1,5 @@
 import folium
 
-from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from .models import Pokemon
 from django.utils.timezone import localtime
@@ -32,7 +31,7 @@ def show_all_pokemons(request):
     pokemons = Pokemon.objects.prefetch_related('entities').all()
     current_time = localtime()
     for pokemon in pokemons:
-        pokemon_entities = pokemon.pokemon.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
+        pokemon_entities = pokemon.entities.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
         if pokemon.image and pokemon_entities:
             pokemon_entity = pokemon_entities.first()
             add_pokemon(
@@ -43,8 +42,8 @@ def show_all_pokemons(request):
 
     pokemons_on_page = []
     for pokemon in pokemons:
-        current_time = localtime()
-        pokemon_entities = pokemon.pokemon.filter(disappeared_at__gt=current_time, appeared_at__lt=current_time)
+        pokemon_entities = pokemon.entities.filter(disappeared_at__gt=current_time,
+                                                   appeared_at__lt=current_time)
         if pokemon_entities.exists():
             pokemons_on_page.append({
                 'pokemon_id': pokemon.id,
@@ -61,8 +60,10 @@ def show_all_pokemons(request):
 def show_pokemon(request, pokemon_id):
     requested_pokemon = get_object_or_404(Pokemon, id=pokemon_id)
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    pokemon_entity = requested_pokemon.pokemon.prefetch_related('pokemon').all().first()
-    if requested_pokemon.image and pokemon_entity.disappeared_at > localtime() > pokemon_entity.appeared_at:
+    pokemon_entity = requested_pokemon.entities.prefetch_related('pokemon').all().first()
+    current_time = localtime()
+    if requested_pokemon.image and pokemon_entity.filter(disappeared_at__gt=current_time,
+                                                         appeared_at__lt=current_time):
         add_pokemon(
             folium_map, pokemon_entity.lat,
             pokemon_entity.lon,
@@ -70,8 +71,8 @@ def show_pokemon(request, pokemon_id):
         )
 
     pokemons_on_page = []
-    pokemon_entities = requested_pokemon.pokemon.filter(disappeared_at__gt=localtime(),
-                                                        appeared_at__lt=localtime())
+    pokemon_entities = requested_pokemon.entities.filter(disappeared_at__gt=current_time,
+                                                         appeared_at__lt=current_time)
     evolution = {
         'previous_evolution': None,
         'next_evolution': None
